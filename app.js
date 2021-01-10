@@ -1,179 +1,212 @@
-var attributes = ['Patient ID',
-'Patient age quantile',
-'SARS-Cov-2 exam result',
-'Patient addmited to regular ward (1=yes, 0=no)',
-'Patient addmited to semi-intensive unit (1=yes, 0=no)',
-'Patient addmited to intensive care unit (1=yes, 0=no)',
-'Hematocrit',
-'Hemoglobin',
-'Platelets',
-'Mean platelet volume ',
-'Red blood Cells',
-'Lymphocytes',
-'Mean corpuscular hemoglobin concentration\xa0(MCHC)',
-'Leukocytes',
-'Basophils',
-'Mean corpuscular hemoglobin (MCH)',
-'Eosinophils',
-'Mean corpuscular volume (MCV)',
-'Monocytes',
-'Red blood cell distribution width (RDW)',
-'Serum Glucose',
-'Respiratory Syncytial Virus',
-'Influenza A',
-'Influenza B',
-'Parainfluenza 1',
-'CoronavirusNL63',
-'Rhinovirus/Enterovirus',
-'Mycoplasma pneumoniae',
-'Coronavirus HKU1',
-'Parainfluenza 3',
-'Chlamydophila pneumoniae',
-'Adenovirus',
-'Parainfluenza 4',
-'Coronavirus229E',
-'CoronavirusOC43',
-'Inf A H1N1 2009',
-'Bordetella pertussis',
-'Metapneumovirus',
-'Parainfluenza 2',
-'Neutrophils',
-'Urea',
-'Proteina C reativa mg/dL',
-'Creatinine',
-'Potassium',
-'Sodium',
-'Influenza B, rapid test',
-'Influenza A, rapid test',
-'Alanine transaminase',
-'Aspartate transaminase',
-'Gamma-glutamyltransferase\xa0',
-'Total Bilirubin',
-'Direct Bilirubin',
-'Indirect Bilirubin',
-'Alkaline phosphatase',
-'Ionized calcium\xa0',
-'Strepto A',
-'Magnesium',
-'pCO2 (venous blood gas analysis)',
-'Hb saturation (venous blood gas analysis)',
-'Base excess (venous blood gas analysis)',
-'pO2 (venous blood gas analysis)',
-'Fio2 (venous blood gas analysis)',
-'Total CO2 (venous blood gas analysis)',
-'pH (venous blood gas analysis)',
-'HCO3 (venous blood gas analysis)',
-'Rods #',
-'Segmented',
-'Promyelocytes',
-'Metamyelocytes',
-'Myelocytes',
-'Myeloblasts',
-'Urine - Esterase',
-'Urine - Aspect',
-'Urine - pH',
-'Urine - Hemoglobin',
-'Urine - Bile pigments',
-'Urine - Ketone Bodies',
-'Urine - Nitrite',
-'Urine - Density',
-'Urine - Urobilinogen',
-'Urine - Protein',
-'Urine - Sugar',
-'Urine - Leukocytes',
-'Urine - Crystals',
-'Urine - Red blood cells',
-'Urine - Hyaline cylinders',
-'Urine - Granular cylinders',
-'Urine - Yeasts',
-'Urine - Color',
-'Partial thromboplastin time\xa0(PTT)\xa0',
-'Relationship (Patient/Normal)',
-'International normalized ratio (INR)',
-'Lactic Dehydrogenase',
-'Prothrombin time (PT), Activity',
-'Vitamin B12',
-'Creatine phosphokinase\xa0(CPK)\xa0',
-'Ferritin',
-'Arterial Lactic Acid',
-'Lipase dosage',
-'D-Dimer',
-'Albumin',
-'Hb saturation (arterial blood gases)',
-'pCO2 (arterial blood gas analysis)',
-'Base excess (arterial blood gas analysis)',
-'pH (arterial blood gas analysis)',
-'Total CO2 (arterial blood gas analysis)',
-'HCO3 (arterial blood gas analysis)',
-'pO2 (arterial blood gas analysis)',
-'Arteiral Fio2',
-'Phosphor',
-'ctO2 (arterial blood gas analysis)'];
-function autocomplete(inp, arr) {
+$(document).ready(function () {
+
+  fetch("./data.json")
+    .then(response => {
+      return response.json();
+    })
+    .then(d => initialize(d)); //entrypoint
+
+  function initialize(ds) {
+    let attributes = Object.keys(ds[0]);
+    startSelect2(attributes);
+    autocomplete(document.querySelector('.autocomplete > input'), attributes);
+
+    //Initialize vital vars
+    let genericGroup = document.querySelector('.group').cloneNode(true);
+
+    //Add event listeners to toggle visibility of remove button on first group and first crit
+    eventToggleVisibility(document.querySelector('.group'));
+    eventToggleVisibility(document.querySelector('.criterion'));
+
+    //Add eventlistener for the 'add criterion' buttons 
+    document.querySelector('.add-criterion').addEventListener('click', (e) => {
+      addCritForm(e.target, attributes, genericGroup.querySelector('.criterion').cloneNode(true));
+    });
+
+    //Add eventlistener for 'add group' buttons
+    document.querySelector('#add-group').addEventListener('click', (e) => {
+      addGroup(e.target, attributes, genericGroup.cloneNode(true));
+    });
+
+    //Add eventlistener for remove buttons
+    let removes = Array.from(document.querySelectorAll('.remove'));
+    removes.forEach((el) => el.addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode)));
+  }
+
+  function addCritForm(button, attr, copiedCrit) {
+    //copy first criterion form and adjust relevant details 
+    let input = copiedCrit.querySelector('.autocomplete > input');
+
+    //add autocomplete to new input fields
+    autocomplete(input, attr);
+
+    //Insert cloned and altered form element at correct pos before 'add crit' button
+    button.parentNode.insertBefore(copiedCrit, button);
+
+    //hide button if max number of crit reached
+    let critNum = getCritNum(copiedCrit.parentNode);
+    if (critNum > 4) button.style.display = 'none';
+    eventToggleVisibility(copiedCrit);
+    copiedCrit.querySelector('.remove').addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode));
+  }
+
+  function addGroup(button, attr, copiedGroup) {
+    let groupNum = getGroupNum();
+
+    //adjust relevant details
+    copiedGroup.querySelector('.group-h').innerHTML = "Group " + (groupNum + 1);
+    let input = copiedGroup.querySelector('.autocomplete > input');
+    autocomplete(input, attr);
+    copiedGroup.querySelector('.add-criterion').addEventListener('click', (e) => addCritForm(
+      e.target,
+      attr,
+      copiedGroup.querySelector('.criterion').cloneNode(true)));
+
+    button.parentNode.insertBefore(copiedGroup, button);
+
+    if (groupNum > 1) button.style.display = 'none';
+
+    Array.from(copiedGroup.querySelectorAll('.remove')).forEach((el, i) => el.addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode)));
+    eventToggleVisibility(copiedGroup);
+    eventToggleVisibility(copiedGroup.querySelector('.criterion'));
+  }
+
+  function eventToggleVisibility(node) {
+    //Display remove button only when the corresponding crit / group is hovered over
+    //and only if group / crit isnt the last element
+    node.addEventListener('mouseover', (e) => {
+      let isCrit = node.className.includes('criterion');
+      let num;
+      if (isCrit) {
+        num = getCritNum(node.parentNode);
+      } else {
+        num = getGroupNum();
+      }
+      if (num > 1) {
+        console.log(node, num, isCrit);
+        e.currentTarget.querySelector('.remove').style.display = 'initial';
+      }
+    });
+
+    node.addEventListener('mouseleave', (e) => {
+      e.currentTarget.querySelector('.remove').style.display = 'none';
+    });
+  }
+
+  function removeSafely(node) {
+    let isCrit = node.className.includes('criterion');
+
+    //Make add button visible again if it is invisible 
+    if (isCrit) toggleVsibility(node.parentNode.querySelector('.add-criterion'), true);
+    else toggleVsibility(document.querySelector('#add-group'), true);
+
+    node.remove();
+
+    //update header of group
+    groups = Array.from(getChildrenOfClass('group'));
+    groups.forEach((el, i) => el.querySelector('.group-h').innerHTML = 'Group ' + (i + 1));
+  }
+
+  //Helper functions
+  function getGroupNum() {
+    return getChildrenOfClass('group').length;
+  }
+
+  function getCritNum(node) {
+    return getChildrenOfClass('criterion', node).length;
+  }
+
+  function getChildrenOfClass(className, node = document) {
+    return node.querySelectorAll('.' + className);
+  }
+
+  function toggleVsibility(node, onlyIfHidden = false) {
+    toggle = (!onlyIfHidden || node.style.display == 'none');
+    if (toggle) node.style.display = (node.style.display == 'none') ? 'initial' : 'none';
+  }
+
+  function startSelect2(attr) {
+    // select 2 is a library used here for the tokenized textarea, under 'compare' section
+    $('.attributes-select2').select2();
+
+    for (i = 0; i < attr.length; i++) {
+      s = document.querySelector("select");
+      el = document.createElement("option");
+      el.innerHTML = attr[i];
+      s.appendChild(el)
+    }
+  }
+
+  //The following code is taken from https://www.w3schools.com/howto/howto_js_autocomplete.asp
+  //Autocompletes text in an input field where the autocoplete options are taken from an array
+  function autocomplete(inp, arr) {
     /*the autocomplete function takes two arguments,
     the text field element and an array of possible autocompleted values:*/
     var currentFocus;
     /*execute a function when someone writes in the text field:*/
-    inp.addEventListener("input", function(e) {
-        var a, b, i, val = this.value;
-        /*close any already open lists of autocompleted values*/
-        closeAllLists();
-        if (!val) { return false;}
-        currentFocus = -1;
-        /*create a DIV element that will contain the items (values):*/
-        a = document.createElement("DIV");
-        a.setAttribute("id", this.id + "autocomplete-list");
-        a.setAttribute("class", "autocomplete-items");
-        /*append the DIV element as a child of the autocomplete container:*/
-        this.parentNode.appendChild(a);
-        /*for each item in the array...*/
-        for (i = 0; i < arr.length; i++) {
-          /*check if the item starts with the same letters as the text field value:*/
-          if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
-            /*create a DIV element for each matching element:*/
-            b = document.createElement("DIV");
-            /*make the matching letters bold:*/
-            b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-            b.innerHTML += arr[i].substr(val.length);
-            /*insert a input field that will hold the current array item's value:*/
-            b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-            /*execute a function when someone clicks on the item value (DIV element):*/
-            b.addEventListener("click", function(e) {
-                /*insert the value for the autocomplete text field:*/
-                inp.value = this.getElementsByTagName("input")[0].value;
-                /*close the list of autocompleted values,
-                (or any other open lists of autocompleted values:*/
-                closeAllLists();
-            });
-            a.appendChild(b);
-          }
+    inp.addEventListener("input", function (e) {
+      var a, b, i, val = this.value;
+      /*close any already open lists of autocompleted values*/
+      closeAllLists();
+      if (!val) {
+        return false;
+      }
+      currentFocus = -1;
+      /*create a DIV element that will contain the items (values):*/
+      a = document.createElement("DIV");
+      a.setAttribute("id", this.id + "autocomplete-list");
+      a.setAttribute("class", "autocomplete-items");
+      /*append the DIV element as a child of the autocomplete container:*/
+      this.parentNode.appendChild(a);
+      /*for each item in the array...*/
+      for (i = 0; i < arr.length; i++) {
+        /*check if the item starts with the same letters as the text field value:*/
+        if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+          /*create a DIV element for each matching element:*/
+          b = document.createElement("DIV");
+          /*make the matching letters bold:*/
+          b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+          b.innerHTML += arr[i].substr(val.length);
+          /*insert a input field that will hold the current array item's value:*/
+          b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+          /*execute a function when someone clicks on the item value (DIV element):*/
+          b.addEventListener("click", function (e) {
+            /*insert the value for the autocomplete text field:*/
+            inp.value = this.getElementsByTagName("input")[0].value;
+            /*close the list of autocompleted values,
+            (or any other open lists of autocompleted values:*/
+            closeAllLists();
+          });
+          a.appendChild(b);
         }
+      }
     });
     /*execute a function presses a key on the keyboard:*/
-    inp.addEventListener("keydown", function(e) {
-        var x = document.getElementById(this.id + "autocomplete-list");
-        if (x) x = x.getElementsByTagName("div");
-        if (e.keyCode == 40) {
-          /*If the arrow DOWN key is pressed,
-          increase the currentFocus variable:*/
-          currentFocus++;
-          /*and and make the current item more visible:*/
-          addActive(x);
-        } else if (e.keyCode == 38) { //up
-          /*If the arrow UP key is pressed,
-          decrease the currentFocus variable:*/
-          currentFocus--;
-          /*and and make the current item more visible:*/
-          addActive(x);
-        } else if (e.keyCode == 13) {
-          /*If the ENTER key is pressed, prevent the form from being submitted,*/
-          e.preventDefault();
-          if (currentFocus > -1) {
-            /*and simulate a click on the "active" item:*/
-            if (x) x[currentFocus].click();
-          }
+    inp.addEventListener("keydown", function (e) {
+      var x = document.getElementById(this.id + "autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) {
+        /*If the arrow DOWN key is pressed,
+        increase the currentFocus variable:*/
+        currentFocus++;
+        /*and and make the current item more visible:*/
+        addActive(x);
+      } else if (e.keyCode == 38) { //up
+        /*If the arrow UP key is pressed,
+        decrease the currentFocus variable:*/
+        currentFocus--;
+        /*and and make the current item more visible:*/
+        addActive(x);
+      } else if (e.keyCode == 13) {
+        /*If the ENTER key is pressed, prevent the form from being submitted,*/
+        e.preventDefault();
+        if (currentFocus > -1) {
+          /*and simulate a click on the "active" item:*/
+          if (x) x[currentFocus].click();
         }
+      }
     });
+
     function addActive(x) {
       /*a function to classify an item as "active":*/
       if (!x) return false;
@@ -184,34 +217,27 @@ function autocomplete(inp, arr) {
       /*add class "autocomplete-active":*/
       x[currentFocus].classList.add("autocomplete-active");
     }
+
     function removeActive(x) {
       /*a function to remove the "active" class from all autocomplete items:*/
       for (var i = 0; i < x.length; i++) {
         x[i].classList.remove("autocomplete-active");
       }
     }
+
     function closeAllLists(elmnt) {
       /*close all autocomplete lists in the document,
       except the one passed as an argument:*/
       var x = document.getElementsByClassName("autocomplete-items");
       for (var i = 0; i < x.length; i++) {
         if (elmnt != x[i] && elmnt != inp) {
-        x[i].parentNode.removeChild(x[i]);
+          x[i].parentNode.removeChild(x[i]);
+        }
       }
     }
-  }
-  /*execute a function when someone clicks in the document:*/
-  document.addEventListener("click", function (e) {
+    /*execute a function when someone clicks in the document:*/
+    document.addEventListener("click", function (e) {
       closeAllLists(e.target);
-  });
+    });
   }
-for (i = 0; i < attributes.length; i++) {
-    s = document.querySelector("select");
-    el = document.createElement("option");
-    el.innerHTML = attributes[i];
-    s.appendChild(el)
-}
-
-$(document).ready(function() {
-    $('.js-example-basic-multiple').select2();
 });

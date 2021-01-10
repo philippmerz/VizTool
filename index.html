@@ -25,62 +25,38 @@
         <div class="conf-field">
             <h1>Domain Selection</h1>
             <div class="group">
-                <p class="group-h">Group 1</p>
-                <div class="attributes">
-                    <div class="attr">
-                        <form autocomplete="off">
-                            <div class="autocomplete">
-                                <input id="myInput1" type="text" name="myAttribute" placeholder="Attribute">
-                            </div>
-                        </form>
-                        <p>positive</p>
-                    </div>
-                    <div class="attr">
-                        <form autocomplete="off">
-                            <div class="autocomplete">
-                                <input id="myInput2" type="text" name="myAttribute" placeholder="Attribute">
-                            </div>
-                        </form>
-                        <p>from 19 to 33 %</p>
-                    </div>
-                    <p>+ Add attribute</p>
+                <div class="even-spacing">
+                    <p class="group-h">Group 1</p>
+                    <p class="remove">x</p>
+                </div>
+                <!-- the criteria that patient groups have to match -->
+                <div class="criteria">
+                    <form autocomplete="off" class="criterion">
+                        <div class="autocomplete">
+                            <input type="text" placeholder="COVID-19">
+                        </div>
+                        <div class="even-spacing">
+                            <input type="text" placeholder="positive">
+                            <p class="remove">x</p>
+                        </div>
+                    </form>
+                    <button class="add-criterion">+ Add criterion</button>
                 </div>
             </div>
-            <div class="group">
-                <p class="group-h">Group 2</p>
-                <div class="attributes">
-                    <div class="attr">
-                        <form autocomplete="off">
-                            <div class="autocomplete">
-                                <input id="myInput3" type="text" name="myAttribute" placeholder="Attribute">
-                            </div>
-                        </form>
-                        <p>4trfevt...</p>
-                    </div>
-                    <p>+ Add attribute</p>
-                </div>
-            </div>
-            <p>+ Add group</p>
+            <button id="add-group">+ Add group</button>
         </div>
         <div class="conf-field">
             <h1 id="comp-header">Compare</h1>
-            <select class="js-example-basic-multiple" name="attributes[]" multiple="multiple">
+            <select class="attributes-select2" name="attributes[]" multiple="multiple">
             </select>
         </div>
     </section>
     <section id="output">
         <p id="output-p">
-            Click a visualization for more detail.                   
+            Click a visualization for more detail.
         </p>
     </section>
 
     <script src="app.js"></script>
 </body>
-<script src="app.js"></script>
-<script>
-    autocomplete(document.getElementById("myInput1"), attributes);
-    autocomplete(document.getElementById("myInput2"), attributes);
-    autocomplete(document.getElementById("myInput3"), attributes);
-</script>
-
 </html>

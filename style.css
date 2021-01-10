@@ -1,3 +1,5 @@
+/* The code concerning the styling of the autocomplete components is taken from
+https://www.w3schools.com/howto/howto_js_autocomplete.asp */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
 * {
@@ -30,7 +32,6 @@ img {
 }
 
 select {
-    font-family: sans-serif;
     width: 100%;
     padding: 0.5rem;
 }
@@ -39,22 +40,15 @@ section {
     border: 2px solid black;
 }
 
-.autocomplete {
-    /*the container must be positioned relative:*/
-    position: relative;
-    display: inline-block;
-}
 
 input {
-    border: 1px solid transparent;
-    background-color: #f1f1f1;
-    padding: 10px;
-    font-size: 16px;
+    padding: 4px;
+    border: none;
 }
 
 input[type=text] {
     background-color: #f1f1f1;
-    width: 100%;
+    width: 90%;
 }
 
 #comp-header {
@@ -78,7 +72,6 @@ input[type=text] {
     padding: 2rem;
 }
 
-
 .conf-field {
     margin-bottom: 1rem;
     padding: .5rem;
@@ -94,17 +87,34 @@ input[type=text] {
 .group-h {
     font-size: 1.2rem;
     font-weight: bold;
-    margin-bottom: .5rem;
 }
 
-.attr {
+.criterion {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: .1rem 0;
 }
 
+.even-spacing {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.remove {
+    display: none;
+    cursor: pointer;
+}
+
+.group > .even-spacing {
+    margin-bottom: 0.5rem;
+}
+
 .autocomplete {
+    /*the container must be positioned relative:*/
+    position: relative;
+    display: inline-block;
     width: 15rem;
 }
 
