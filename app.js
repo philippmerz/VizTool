@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-  fetch("./data.json")
+  fetch("./data/data.json")
     .then(response => {
       return response.json();
     })
@@ -31,6 +31,13 @@ $(document).ready(function () {
     //Add eventlistener for remove buttons
     let removes = Array.from(document.querySelectorAll('.remove'));
     removes.forEach((el) => el.addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode)));
+    
+    // Add eventlistener for showing visualizations
+    document.querySelector('click', showVisualizations)
+  }
+
+  function showVisualizations() {
+    
   }
 
   function addCritForm(button, attr, copiedCrit) {
@@ -83,7 +90,6 @@ $(document).ready(function () {
         num = getGroupNum();
       }
       if (num > 1) {
-        console.log(node, num, isCrit);
         e.currentTarget.querySelector('.remove').style.display = 'initial';
       }
     });
