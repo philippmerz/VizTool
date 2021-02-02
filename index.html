@@ -8,7 +8,7 @@
         integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
-    <title>VisTool</title>
+    <title>VizTool</title>
 </head>
 
 <body>
@@ -36,7 +36,17 @@
                             <input type="text" placeholder="COVID-19">
                         </div>
                         <div class="even-spacing">
-                            <input type="text" placeholder="positive">
+                            <template id="cat-attr">
+                                <select name="values"></select>
+                            </template>
+                            <template id="cont-attr">
+                                <div class="continuous">
+                                    <p>from: </p>
+                                    <input type="number">
+                                    <p>to: </p>
+                                    <input type="number">
+                                </div>
+                            </template>
                             <p class="remove">x</p>
                         </div>
                     </form>
@@ -60,4 +70,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

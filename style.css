@@ -98,10 +98,11 @@ input[type=text] {
 
 .even-spacing {
     display: flex;
+    flex: 1;
     justify-content: space-between;
     align-items: center;
 }
-
+ 
 .remove {
     display: none;
     cursor: pointer;
@@ -109,6 +110,20 @@ input[type=text] {
 
 .group > .even-spacing {
     margin-bottom: 0.5rem;
+}
+
+.even-spacing > select {
+    width: 100%;
+}
+
+.select2-container--default {
+    width: 100% !important;
+}
+
+.continuous {
+    display: flex;
+    height: 100%;
+    flex-direction: row;
 }
 
 .autocomplete {

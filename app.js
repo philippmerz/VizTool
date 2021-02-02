@@ -7,12 +7,12 @@ $(document).ready(function () {
     .then(d => initialize(d)); //entrypoint
 
   function initialize(ds) {
-    let attributes = Object.keys(ds[0]);
-    startSelect2(attributes);
-    autocomplete(document.querySelector('.autocomplete > input'), attributes);
-
     //Initialize vital vars
     let genericGroup = document.querySelector('.group').cloneNode(true);
+    let attributes = Object.keys(ds[0]);
+
+    startSelect2(attributes, document.querySelector('.attributes-select2'));
+    autocomplete(document.querySelector('.autocomplete > input'), attributes);
 
     //Add event listeners to toggle visibility of remove button on first group and first crit
     eventToggleVisibility(document.querySelector('.group'));
@@ -31,14 +31,43 @@ $(document).ready(function () {
     //Add eventlistener for remove buttons
     let removes = Array.from(document.querySelectorAll('.remove'));
     removes.forEach((el) => el.addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode)));
-    
+
+    // Add eventlistener to criterion inputs
+    let attrCrit = Array.from(document.querySelectorAll('.autocomplete > input'));
+    attrCrit.forEach((el) => el.addEventListener('input',
+      (e) => updateDataType(e.target.value, e.target)));
+
     // Add eventlistener for showing visualizations
     document.querySelector('click', showVisualizations)
   }
 
-  function showVisualizations() {
-    
+  function updateDataType(attribute, inputEl) {
+    fetch("./data/attrInfo.json")
+      .then(response => {
+        return response.json();
+      })
+      .then(d => {
+        console.log(inputEl, d[attribute]);
+        // If attr is categorical, autocomplete value field with all possible categories
+        evenSpacing = inputEl.parentNode.parentNode.querySelector(".even-spacing");
+        if (d[attribute]['type'] == 'categorical') {
+          // check if theres an 
+          if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
+          if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
+          categoricalInput = document.querySelector('#cat-attr').content.cloneNode(true);
+          inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(categoricalInput);
+          startSelect2(d[attribute]['values'], inputEl.parentNode.parentNode.querySelector(".even-spacing > select"));
+        } else {
+          // Remove any existing input
+          if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
+          if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
+          continuousInput = document.querySelector('#cont-attr').content.cloneNode(true);
+          inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(continuousInput);
+        }
+      });
   }
+
+  function showVisualizations() {}
 
   function addCritForm(button, attr, copiedCrit) {
     //copy first criterion form and adjust relevant details 
@@ -54,6 +83,7 @@ $(document).ready(function () {
     let critNum = getCritNum(copiedCrit.parentNode);
     if (critNum > 4) button.style.display = 'none';
     eventToggleVisibility(copiedCrit);
+    input.addEventListener('input', (e) => updateDataType(e.target.value, e.target.parentNode.querySelector('.even-spacing > select')));
     copiedCrit.querySelector('.remove').addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode));
   }
 
@@ -64,6 +94,7 @@ $(document).ready(function () {
     copiedGroup.querySelector('.group-h').innerHTML = "Group " + (groupNum + 1);
     let input = copiedGroup.querySelector('.autocomplete > input');
     autocomplete(input, attr);
+    input.addEventListener('input', (e) => updateDataType(e.target.value, e.target.parentNode.querySelector('.even-spacing > input')));
     copiedGroup.querySelector('.add-criterion').addEventListener('click', (e) => addCritForm(
       e.target,
       attr,
@@ -131,15 +162,13 @@ $(document).ready(function () {
     if (toggle) node.style.display = (node.style.display == 'none') ? 'initial' : 'none';
   }
 
-  function startSelect2(attr) {
-    // select 2 is a library used here for the tokenized textarea, under 'compare' section
-    $('.attributes-select2').select2();
-
+  function startSelect2(attr, select) {
+    // select2 is a library used here for the tokenized textarea, under 'compare' section
+    $(select).select2();
     for (i = 0; i < attr.length; i++) {
-      s = document.querySelector("select");
       el = document.createElement("option");
       el.innerHTML = attr[i];
-      s.appendChild(el)
+      select.appendChild(el)
     }
   }
 
@@ -179,6 +208,9 @@ $(document).ready(function () {
           b.addEventListener("click", function (e) {
             /*insert the value for the autocomplete text field:*/
             inp.value = this.getElementsByTagName("input")[0].value;
+
+            //modified by group: also change type of criterion input to match attribute data type
+            updateDataType(inp.value, inp);
             /*close the list of autocompleted values,
             (or any other open lists of autocompleted values:*/
             closeAllLists();
