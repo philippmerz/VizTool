@@ -1,84 +1,108 @@
 $(document).ready(function () {
-
   fetch("./data/data.json")
-    .then(response => {
-      return response.json();
-    })
-    .then(d => initialize(d)); //entrypoint
+    .then(response => response.json())
+    .then(d => {
+      fetch('./data/attrInfo.json')
+        .then(response => {
+          return response.json();
+        })
+        .then(attrInfo => initialize(d, attrInfo)); //entrypoint
+    });
 
-  function initialize(ds) {
+  function initialize(ds, attrInfo) {
     //Initialize vital vars
     let genericGroup = document.querySelector('.group').cloneNode(true);
     let attributes = Object.keys(ds[0]);
 
     startSelect2(attributes, document.querySelector('.attributes-select2'));
-    autocomplete(document.querySelector('.autocomplete > input'), attributes);
+    autocomplete(document.querySelector('.autocomplete > input'), attributes, attrInfo);
 
     //Add event listeners to toggle visibility of remove button on first group and first crit
     eventToggleVisibility(document.querySelector('.group'));
     eventToggleVisibility(document.querySelector('.criterion'));
 
     //Add eventlistener for the 'add criterion' buttons 
-    document.querySelector('.add-criterion').addEventListener('click', (e) => {
-      addCritForm(e.target, attributes, genericGroup.querySelector('.criterion').cloneNode(true));
+    document.querySelector('.add-criterion').addEventListener('click', e => {
+      addCritForm(e.target, attributes, genericGroup.querySelector('.criterion').cloneNode(true), attrInfo);
     });
 
     //Add eventlistener for 'add group' buttons
-    document.querySelector('#add-group').addEventListener('click', (e) => {
-      addGroup(e.target, attributes, genericGroup.cloneNode(true));
+    document.querySelector('#add-group').addEventListener('click', e => {
+      addGroup(e.target, attributes, genericGroup.cloneNode(true), attrInfo);
     });
 
     //Add eventlistener for remove buttons
     let removes = Array.from(document.querySelectorAll('.remove'));
-    removes.forEach((el) => el.addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode)));
+    removes.forEach((el) => el.addEventListener('click', e => removeSafely(e.target.parentNode.parentNode)));
 
     // Add eventlistener to criterion inputs
     let attrCrit = Array.from(document.querySelectorAll('.autocomplete > input'));
-    attrCrit.forEach((el) => el.addEventListener('input',
-      (e) => updateDataType(e.target.value, e.target, attributes)));
+    attrCrit.forEach(el => el.addEventListener('input',
+      (e) => updateDataType(e.target.value, e.target, attributes, attrInfo)));
 
     // Add eventlistener for showing visualizations
-    document.querySelector('#show').addEventListener('click', showVisualizations);
+    document.querySelector('#show').addEventListener('click', () => showVisualizations(ds, attrInfo));
   }
 
-  function updateDataType(maybeAttribute, inputEl, attributes) {
+  function updateDataType(maybeAttribute, inputEl, attributes, attrInfo) {
     // only proceed if input (maybeAttribute) is valid attribute name
     if (attributes.includes(maybeAttribute)) {
-      fetch("./data/attrInfo.json")
-        .then(response => {
-          return response.json();
-        })
-        .then(d => {
-          // If attr is categorical, autocomplete value field with all possible categories
-          evenSpacing = inputEl.parentNode.parentNode.querySelector(".even-spacing");
-          if (d[maybeAttribute]['type'] == 'categorical') {
-            if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
-            if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
-            categoricalInput = document.querySelector('#cat-attr').content.cloneNode(true);
-            inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(categoricalInput);
-            startSelect2(d[maybeAttribute]['values'], inputEl.parentNode.parentNode.querySelector(".even-spacing > select"));
-          } else {
-            // Remove any existing input
-            if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
-            if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
-            continuousInput = document.querySelector('#cont-attr').content.cloneNode(true);
-            inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(continuousInput);
-          }
-        });
+      // If attr is categorical, autocomplete value field with all possible categories
+      evenSpacing = inputEl.parentNode.parentNode.querySelector(".even-spacing");
+      if (attrInfo[maybeAttribute]['type'] == 'categorical') {
+        if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
+        if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
+        categoricalInput = document.querySelector('#cat-attr').content.cloneNode(true);
+        inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(categoricalInput);
+        startSelect2(attrInfo[maybeAttribute]['values'], inputEl.parentNode.parentNode.querySelector(".even-spacing > select"));
+      } else {
+        // Remove any existing input
+        if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
+        if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
+        continuousInput = document.querySelector('#cont-attr').content.cloneNode(true);
+        inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(continuousInput);
+      }
     }
   }
 
-  function showVisualizations() {
+  function showVisualizations(data, attrInfo) {
     criteria = getCriteria();
-    console.log(criteria);
+    patientGroups = getPatientGroups(data, criteria, attrInfo);
+    // TODO: add info to output panel
+    attrToCompare = getAttributesToCompare();
+    input = [patientGroups, attrToCompare];
+
+    //TODO: ADD VISUALIZATIONS HERE
+    console.log(input);
   }
 
-  function addCritForm(button, attr, copiedCrit) {
+  function getPatientGroups(data, criteria, attrInfo) {
+    patientGroups = [];
+    for (const group of criteria) {
+      patientGroup = [];
+      patientGroup.push(data.filter(patient => isCritsMet(patient, group, attrInfo)));
+      patientGroups.push(patientGroup);
+    }
+    return patientGroups;
+  }
+
+  function isCritsMet(patient, crits, attrInfo) {
+    isMet = true;
+    for (const crit in crits) {
+      if (!isMet) break;
+      (patient[crit] === null)
+      if (attrInfo[crit] == 'categorical') isMet = isMet && crits[crit] == patient[crit] && crits[crit];
+      else isMet = isMet && patient[crit] > crits[crit][0] && patient[crit] < crits[crit][1] && !(patient[crit] === null);
+    }
+    return isMet;
+  }
+
+  function addCritForm(button, attr, copiedCrit, attrInfo) {
     //copy first criterion form and adjust relevant details 
     let input = copiedCrit.querySelector('.autocomplete > input');
 
     //add autocomplete to new input fields
-    autocomplete(input, attr);
+    autocomplete(input, attr, attrInfo);
 
     //Insert cloned and altered form element at correct pos before 'add crit' button
     button.parentNode.insertBefore(copiedCrit, button);
@@ -91,13 +115,13 @@ $(document).ready(function () {
     copiedCrit.querySelector('.remove').addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode));
   }
 
-  function addGroup(button, attr, copiedGroup) {
+  function addGroup(button, attr, copiedGroup, attrInfo) {
     let groupNum = getGroupNum();
 
     //adjust relevant details
     copiedGroup.querySelector('.group-h').innerHTML = "Group " + (groupNum + 1);
     let input = copiedGroup.querySelector('.autocomplete > input');
-    autocomplete(input, attr);
+    autocomplete(input, attr, attrInfo);
     input.addEventListener('input', (e) => updateDataType(e.target.value, e.target.parentNode.querySelector('.even-spacing > input')));
     copiedGroup.querySelector('.add-criterion').addEventListener('click', (e) => addCritForm(
       e.target,
@@ -132,6 +156,12 @@ $(document).ready(function () {
     node.addEventListener('mouseleave', (e) => {
       e.currentTarget.querySelector('.remove').style.display = 'none';
     });
+  }
+
+  function getAttributesToCompare() {
+    selector = '.select2-container--default .select2-selection--multiple .select2-selection__choice__display';
+    attrElements = Array.from(document.querySelectorAll(selector));
+    return attrElements.map(el => el.innerHTML);
   }
 
   function getCriteria() {
@@ -206,7 +236,7 @@ $(document).ready(function () {
 
   //The following code is taken from https://www.w3schools.com/howto/howto_js_autocomplete.asp
   //Autocompletes text in an input field where the autocoplete options are taken from an array
-  function autocomplete(inp, arr) {
+  function autocomplete(inp, arr, attrInfo) {
     /*the autocomplete function takes two arguments,
     the text field element and an array of possible autocompleted values:*/
     var currentFocus;
@@ -242,7 +272,7 @@ $(document).ready(function () {
             inp.value = this.getElementsByTagName("input")[0].value;
 
             //modified by group: also change type of criterion input to match attribute data type
-            updateDataType(inp.value, inp, arr);
+            updateDataType(inp.value, inp, arr, attrInfo);
             /*close the list of autocompleted values,
             (or any other open lists of autocompleted values:*/
             closeAllLists();
