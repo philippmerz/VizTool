@@ -35,39 +35,43 @@ $(document).ready(function () {
     // Add eventlistener to criterion inputs
     let attrCrit = Array.from(document.querySelectorAll('.autocomplete > input'));
     attrCrit.forEach((el) => el.addEventListener('input',
-      (e) => updateDataType(e.target.value, e.target)));
+      (e) => updateDataType(e.target.value, e.target, attributes)));
 
     // Add eventlistener for showing visualizations
-    document.querySelector('click', showVisualizations)
+    document.querySelector('#show').addEventListener('click', showVisualizations);
   }
 
-  function updateDataType(attribute, inputEl) {
-    fetch("./data/attrInfo.json")
-      .then(response => {
-        return response.json();
-      })
-      .then(d => {
-        console.log(inputEl, d[attribute]);
-        // If attr is categorical, autocomplete value field with all possible categories
-        evenSpacing = inputEl.parentNode.parentNode.querySelector(".even-spacing");
-        if (d[attribute]['type'] == 'categorical') {
-          // check if theres an 
-          if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
-          if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
-          categoricalInput = document.querySelector('#cat-attr').content.cloneNode(true);
-          inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(categoricalInput);
-          startSelect2(d[attribute]['values'], inputEl.parentNode.parentNode.querySelector(".even-spacing > select"));
-        } else {
-          // Remove any existing input
-          if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
-          if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
-          continuousInput = document.querySelector('#cont-attr').content.cloneNode(true);
-          inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(continuousInput);
-        }
-      });
+  function updateDataType(maybeAttribute, inputEl, attributes) {
+    // only proceed if input (maybeAttribute) is valid attribute name
+    if (attributes.includes(maybeAttribute)) {
+      fetch("./data/attrInfo.json")
+        .then(response => {
+          return response.json();
+        })
+        .then(d => {
+          // If attr is categorical, autocomplete value field with all possible categories
+          evenSpacing = inputEl.parentNode.parentNode.querySelector(".even-spacing");
+          if (d[maybeAttribute]['type'] == 'categorical') {
+            if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
+            if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
+            categoricalInput = document.querySelector('#cat-attr').content.cloneNode(true);
+            inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(categoricalInput);
+            startSelect2(d[maybeAttribute]['values'], inputEl.parentNode.parentNode.querySelector(".even-spacing > select"));
+          } else {
+            // Remove any existing input
+            if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
+            if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
+            continuousInput = document.querySelector('#cont-attr').content.cloneNode(true);
+            inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(continuousInput);
+          }
+        });
+    }
   }
 
-  function showVisualizations() {}
+  function showVisualizations() {
+    criteria = getCriteria();
+    console.log(criteria);
+  }
 
   function addCritForm(button, attr, copiedCrit) {
     //copy first criterion form and adjust relevant details 
@@ -83,7 +87,7 @@ $(document).ready(function () {
     let critNum = getCritNum(copiedCrit.parentNode);
     if (critNum > 4) button.style.display = 'none';
     eventToggleVisibility(copiedCrit);
-    input.addEventListener('input', (e) => updateDataType(e.target.value, e.target.parentNode.querySelector('.even-spacing > select')));
+    input.addEventListener('input', (e) => updateDataType(e.target.value, e.target.parentNode.querySelector('.even-spacing > select'), attr));
     copiedCrit.querySelector('.remove').addEventListener('click', (e) => removeSafely(e.target.parentNode.parentNode));
   }
 
@@ -128,6 +132,34 @@ $(document).ready(function () {
     node.addEventListener('mouseleave', (e) => {
       e.currentTarget.querySelector('.remove').style.display = 'none';
     });
+  }
+
+  function getCriteria() {
+    // returns list of criteria grouped by group into lists
+    // Example: [{attr1: crit1, attr2: crit2}, {attr1: crit1, attr2: crit2, attr3: crit3}]
+    criteria = [];
+    let i = 0;
+
+    // loop over every group
+    for (const group of document.querySelectorAll('.group')) {
+      criteria.push({});
+
+      // loop over every criterion in a group
+      for (const crit of group.querySelectorAll('.criterion')) {
+        let value = 0;
+
+        // get value of criterion depending on whether its continuous or categorical
+        let existsCont = crit.querySelector('.continuous');
+        if (existsCont) value = Array.from(existsCont.querySelectorAll('input')).map((i) => i.value);
+        else value = crit.querySelector('.select2-selection__rendered').innerHTML;
+
+        // add value to dict with attribute name as key
+        criteria[i][crit.querySelector('.autocomplete > input').value] = value;
+      }
+      i++;
+    }
+
+    return criteria;
   }
 
   function removeSafely(node) {
@@ -210,7 +242,7 @@ $(document).ready(function () {
             inp.value = this.getElementsByTagName("input")[0].value;
 
             //modified by group: also change type of criterion input to match attribute data type
-            updateDataType(inp.value, inp);
+            updateDataType(inp.value, inp, arr);
             /*close the list of autocompleted values,
             (or any other open lists of autocompleted values:*/
             closeAllLists();
