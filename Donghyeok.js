@@ -53,10 +53,9 @@ function ridgeplot(data, dimensions) {
     .attr("y", height + 30)
     .text("Unit : 0.1");
 
-  // Inefficient
   allDensity = []
   numOfGroups = data.map(p => p['gr']).filter((value, index, self) => self.indexOf(value) === index).length;
-  colors = ['#69b3a2', '#404080'];
+  colors = ['#1f77b4', '#ff7f0e', '#2ca02c'];
   for (let i = 0; i < numOfGroups; i++) {
     var kde = kernelDensityEstimator(kernelEpanechnikov(7), x.ticks(40)) // increase this 40 for more accurate density.
     allDensity[i] = [];
@@ -97,6 +96,8 @@ function ridgeplot(data, dimensions) {
           return y(d[1]);
         })
       )
+  svg.append("circle").attr("cx", 320).attr("cy", 20 + (i * 30)).attr("r", 6).style("fill", colors[i])
+  svg.append("text").attr("x", 330).attr("y", 20 + (i * 30)).text("Group " + (i + 1)).style("font-size", "15px").attr("alignment-baseline", "middle")
   }
 
   // Compute kernel density estimation
@@ -115,11 +116,5 @@ function ridgeplot(data, dimensions) {
       return Math.abs(v /= k) <= 1 ? 0.75 * (1 - v * v) / k : 0;
     };
   }
-
-  svg.append("circle").attr("cx", 320).attr("cy", 20).attr("r", 6).style("fill", "#69b3a2")
-  svg.append("circle").attr("cx", 320).attr("cy", 50).attr("r", 6).style("fill", "#404080")
-  svg.append("text").attr("x", 330).attr("y", 20).text("Group 1").style("font-size", "15px").attr("alignment-baseline", "middle")
-  svg.append("text").attr("x", 330).attr("y", 50).text("Group 2").style("font-size", "15px").attr("alignment-baseline", "middle")
-
 
 }
