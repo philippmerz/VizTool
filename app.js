@@ -73,22 +73,30 @@ $(document).ready(function () {
     // TODO: add info to output panel
     attrToCompare = getAttributesToCompare();
     input = [patientGroups, attrToCompare];
-    console.log(patientGroups);
-    //TODO: ADD VISUALIZATIONS HERE
-    SPM(patientGroups, attrToCompare);
-    var hFigureInstance = HealthFigure(groups, w, className, {
-      minScale: 1
-    }); // from data.js
-    var additionalFigure = hFigureInstance.plotAt(0);
 
+    console.log(document.querySelectorAll('#main svg'));
+    SPM(patientGroups.flat(5), attrToCompare);
+    ridgeplot(patientGroups.flat(5), attrToCompare);
 
-    console.log(input);
+    Array.from(document.querySelectorAll('#main svg')).forEach((e) => {
+      e.setAttribute('viewBox', '0 0 ' + e.clientWidth + ' ' + e.clientHeight);
+      e.setAttribute('width', '100%');
+    });
   }
 
   function getPatientGroups(data, criteria, attrInfo) {
     patientGroups = [];
     for (const group of criteria) {
       patientGroups.push(data.filter(patient => isCritsMet(patient, group, attrInfo)));
+    }
+
+    // Add group number as parameter to each patient
+    let groupNum = 1;
+    for (const group of patientGroups) {
+      for (const patient of group) {
+        patient['gr'] = 'Group ' + groupNum;
+      }
+      groupNum++;
     }
     return patientGroups;
   }
@@ -246,21 +254,7 @@ $(document).ready(function () {
 
   //uses https://d3js.org/d3.v5.min.js
   //creds to https://github.com/zhangyu94/d3-scatterplot-matrix
-  function SPM(groups, attributes) {
-
-    const grlist = []
-    for (let i = 0; i < groups.length; i++) {
-      for (const patient in groups[i]) {
-        if (i == 0) {
-          groups[i][patient]['gr'] = 'Group 1';
-        } else if (i == 1) {
-          groups[i][patient]['gr'] = 'Group 2';
-        } else {
-          groups[i][patient]['gr'] = 'Group 3';
-        }
-        grlist.push(groups[i][patient]);
-      }
-    }
+  function SPM(grlist, attributes) {
 
     (function (root, factory) {
       "use strict";
@@ -730,8 +724,6 @@ $(document).ready(function () {
 
 
     let chart = d3.scatterplotMatrix()
-      .width(1000) //change width and height however u want
-      .height(700)
       .traits(attributes)
       .colorValueMapper(d => d.gr)
 
@@ -739,8 +731,6 @@ $(document).ready(function () {
     let svg = d3.select('#main').append('svg')
       .datum(grlist)
       .call(chart)
-    console.log(svg)
-
   }
 
   //The following code is taken from https://www.w3schools.com/howto/howto_js_autocomplete.asp

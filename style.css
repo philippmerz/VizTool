@@ -68,12 +68,6 @@ input[type=number] {
 }
 
 #main svg {
-    flex: 1 1 1;
-}
-
-svg > g {
-    width: 90%;
-    height: 90%;
 }
 
 #configuration {
