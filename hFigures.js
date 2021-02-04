@@ -39,7 +39,7 @@ function HealthFigure(groups, w, className, options){
     function createSVG(className, w){
         var svg;
 
-        svg = d3.select("div." + className)
+        svg = d3.select('#main')
             .append("svg")
             .attr("width", "100%")
             .attr("height", "100%");
