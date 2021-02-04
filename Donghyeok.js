@@ -23,7 +23,7 @@ function SPM(data,dimensions){
 // set the dimensions and margins of the graph
 var margin = {top: 100, right: 30, bottom: 30, left:200},
     width = 600 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    height = 370 - margin.top - margin.bottom;
 
 // append the svg object to the body of the page
 var svg = d3.select("#my_dataviz")
@@ -60,7 +60,12 @@ var svg = d3.select("#my_dataviz")
     .paddingInner(1)
   svg.append("g")
     .call(d3.axisLeft(yName));
-
+  // Add X axis label:
+  svg.append("text")
+      .attr("text-anchor", "end")
+      .attr("x", width-20)
+      .attr("y", height+30)
+      .text("Unit : 0.1");
   
 
   // Compute kernel density estimation for each column: for positive
@@ -134,10 +139,10 @@ function kernelEpanechnikov(k) {
   };
 }
 
-svg.append("circle").attr("cx",320).attr("cy",30).attr("r", 6).style("fill", "#69b3a2")
-svg.append("circle").attr("cx",320).attr("cy",60).attr("r", 6).style("fill", "#404080")
-svg.append("text").attr("x", 330).attr("y", 30).text("Positive").style("font-size", "15px").attr("alignment-baseline","middle")
-svg.append("text").attr("x", 330).attr("y", 60).text("Negative").style("font-size", "15px").attr("alignment-baseline","middle")
+svg.append("circle").attr("cx",320).attr("cy",20).attr("r", 6).style("fill", "#69b3a2")
+svg.append("circle").attr("cx",320).attr("cy",50).attr("r", 6).style("fill", "#404080")
+svg.append("text").attr("x", 330).attr("y", 20).text("Positive").style("font-size", "15px").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 330).attr("y", 50).text("Negative").style("font-size", "15px").attr("alignment-baseline","middle")
 
 
 }
