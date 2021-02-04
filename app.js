@@ -73,7 +73,7 @@ $(document).ready(function () {
     // TODO: add info to output panel
     attrToCompare = getAttributesToCompare();
     input = [patientGroups, attrToCompare];
-
+    console.log(patientGroups);
     //TODO: ADD VISUALIZATIONS HERE
     SPM(patientGroups, attrToCompare);
     var hFigureInstance = HealthFigure(groups, w, className, {
@@ -88,9 +88,7 @@ $(document).ready(function () {
   function getPatientGroups(data, criteria, attrInfo) {
     patientGroups = [];
     for (const group of criteria) {
-      patientGroup = [];
-      patientGroup.push(data.filter(patient => isCritsMet(patient, group, attrInfo)));
-      patientGroups.push(patientGroup);
+      patientGroups.push(data.filter(patient => isCritsMet(patient, group, attrInfo)));
     }
     return patientGroups;
   }
