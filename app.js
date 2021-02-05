@@ -235,7 +235,11 @@ $(document).ready(function () {
         // get value of criterion depending on whether its continuous or categorical
         let existsCont = crit.querySelector('.continuous');
         if (existsCont) value = Array.from(existsCont.querySelectorAll('input')).map((i) => i.value);
-        else value = crit.querySelector('.select2-selection__rendered').innerHTML;
+        else try {
+          value = crit.querySelector('.select2-selection__rendered').innerHTML;
+        } catch {
+          document.querySelector('#output').innerHTML += '<p style="color: darkred">You didn\'t enter an attribute into a criterion. Double check and try again</p>';
+        }
 
         // add value to dict with attribute name as key
         criteria[i][crit.querySelector('.autocomplete > input').value] = value;
