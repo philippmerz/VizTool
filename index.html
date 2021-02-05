@@ -63,6 +63,25 @@
     <section id="output">
     </section>
 
+    <button id="myBtn">Instructions</button>
+
+    <!-- The Modal, from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_modal -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h1>Overview</h1>
+            <p>This tool allows you to compare groups of patients on selected attributes. In order to configure which patients are included in which group, select an attribute in the corresponding group and then select the values for the attibute that the patients in this group should express. You can add up to five of such criteria per group, and up to three groups. In the 'compare' section, you can then select attributes that you want to visualize.</p>
+            <br>
+            <h1>Visualizations</h1>
+            <p>After clicking the 'Show vizualizations' button when you're done entering all values, three types of visualizations appear: a scatterplot(matrix) (SPM), a ridgeplot and a radarplot. The SPM can visualize up to three groups, while the ridgeplot and the radarplot only visualize the first two groups. The radarplot visualizes the first group using circles colored in saturated colors, and the second group using a darker, greyish version of the same color.</p>
+            <br>
+            <h1>The output section</h1>
+            <p>The output section shows you how many values the visualizations are computed on. Since the dataset used for these visualizations is very sparse, some visualizations can be misleading since they are done on a tiny sample and thus don't represent the population.</p>
+        </div>
+
+    </div>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3v4 = d3;

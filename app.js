@@ -11,6 +11,7 @@ $(document).ready(function () {
 
   function initialize(ds, attrInfo) {
     //Initialize vital vars
+    setupModal();
     let genericGroup = document.querySelector('.group').cloneNode(true);
     let attributes = Object.keys(ds[0]);
 
@@ -60,6 +61,10 @@ $(document).ready(function () {
         if (evenSpacing.querySelector('.continuous')) evenSpacing.removeChild(evenSpacing.querySelector('.continuous'));
         if (evenSpacing.querySelector('.select2')) evenSpacing.removeChild(evenSpacing.querySelector('.select2'));
         continuousInput = document.querySelector('#cont-attr').content.cloneNode(true);
+        Array.from(continuousInput.querySelectorAll('input')).forEach(el => {
+          el.setAttribute('min', attrInfo[maybeAttribute]['min']);
+          el.setAttribute('max', attrInfo[maybeAttribute]['max']);
+        });
         inputEl.parentNode.parentNode.querySelector(".even-spacing").prepend(continuousInput);
       }
     }
@@ -252,6 +257,33 @@ $(document).ready(function () {
     //update header of group
     groups = Array.from(getChildrenOfClass('group'));
     groups.forEach((el, i) => el.querySelector('.group-h').innerHTML = 'Group ' + (i + 1));
+  }
+
+  function setupModal() {
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("myBtn");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal 
+    btn.onclick = function () {
+      modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
   }
 
   //Helper functions
