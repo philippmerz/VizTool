@@ -78,10 +78,9 @@ $(document).ready(function () {
     ridgeplot(patientGroups.flat(5), attrToCompare);
 
     HealthFigure(patientGroups, 800, 'main', attrToCompare).plotAt(0);
-
-    Array.from(document.querySelectorAll('#main svg')).forEach((e) => {
-      e.setAttribute('viewBox', '0 0 ' + e.clientWidth + ' ' + e.clientHeight);
-      e.setAttribute('width', '100%');
+    dims = ['0 0 900 900', '-100 -250 1000 1100', '0 -300 625 625'];
+    Array.from(document.querySelectorAll('#main svg')).forEach((e, i) => {
+      e.setAttribute('viewBox', dims[i]);
     });
   }
 

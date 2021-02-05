@@ -1,18 +1,18 @@
-//source : https://www.d3-graph-gallery.com/graph/ridgeline_basic.html
+//source : https://www.d3v4-graph-gallery.com/graph/ridgeline_basic.html
 
 function ridgeplot(data, dimensions) {
   // set the dimensions and margins of the graph
   var margin = {
-      top: 100,
-      right: 30,
-      bottom: 30,
-      left: 200
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0
     },
-    width = 600 - margin.left - margin.right,
-    height = 370 - margin.top - margin.bottom;
+    width = 800 - margin.left - margin.right,
+    height = 800 - margin.top - margin.bottom;
 
   // append the svg object to the body of the page
-  var svg = d3.select("#main")
+  var svg = d3v4.select("#main")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -26,26 +26,26 @@ function ridgeplot(data, dimensions) {
   var n = categories.length
 
   // Add X axis
-  var x = d3.scaleLinear()
+  var x = d3v4.scaleLinear()
     .domain([-10, 20])
     .range([0, width]);
   svg.append("g")
     .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
+    .call(d3v4.axisBottom(x));
 
 
   // Create a Y scale for densities
-  var y = d3.scaleLinear()
+  var y = d3v4.scaleLinear()
     .domain([0, 0.4])
     .range([height, 0]);
 
   // Create the Y axis for names
-  var yName = d3.scaleBand()
+  var yName = d3v4.scaleBand()
     .domain(categories)
     .range([0, height])
     .paddingInner(1)
   svg.append("g")
-    .call(d3.axisLeft(yName));
+    .call(d3v4.axisLeft(yName));
   // Add X axis label:
   svg.append("text")
     .attr("text-anchor", "end")
@@ -87,8 +87,8 @@ function ridgeplot(data, dimensions) {
       .attr("opacity", ".6")
       .attr("stroke", "#000")
       .attr("stroke-width", 1)
-      .attr("d", d3.line()
-        .curve(d3.curveBasis)
+      .attr("d", d3v4.line()
+        .curve(d3v4.curveBasis)
         .x(function (d) {
           return x(d[0]);
         })
@@ -104,7 +104,7 @@ function ridgeplot(data, dimensions) {
   function kernelDensityEstimator(kernel, X) {
     return function (V) {
       return X.map(function (x) {
-        return [x, d3.mean(V, function (v) {
+        return [x, d3v4.mean(V, function (v) {
           return kernel(x - v);
         })];
       });
