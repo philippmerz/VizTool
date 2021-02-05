@@ -143,7 +143,7 @@ $(document).ready(function () {
     copiedGroup.querySelector('.add-criterion').addEventListener('click', (e) => addCritForm(
       e.target,
       attr,
-      clonedCrit,
+      clonedCrit.cloneNode(true),
       attrInfo));
 
     button.parentNode.insertBefore(copiedGroup, button);
