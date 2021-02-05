@@ -74,6 +74,8 @@ $(document).ready(function () {
     attrToCompare = getAttributesToCompare();
     input = [patientGroups, attrToCompare];
 
+    updateOutput(input);
+
     SPM(patientGroups.flat(5), attrToCompare);
     ridgeplot(patientGroups.flat(5), attrToCompare);
 
@@ -82,6 +84,34 @@ $(document).ready(function () {
     Array.from(document.querySelectorAll('#main svg')).forEach((e, i) => {
       e.setAttribute('viewBox', dims[i]);
     });
+  }
+
+  function updateOutput(input) {
+    output = document.querySelector('#output');
+    output.innerHTML = '';
+    nulls = [];
+    for (const group of input[0]) {
+      nullsOfGroup = {};
+      input[1].forEach(attr => nullsOfGroup[attr] = 0);
+      for (const patient of group) {
+        for (const attribute of input[1]) {
+          if (patient[attribute] === null) nullsOfGroup[attribute]++;
+        }
+      }
+      nulls.push(nullsOfGroup);
+    }
+    patientsPerGroup = input[0].map(el => el.length)
+    outputString = '';
+    for (const group in nulls) {
+      console.log(group);
+      outputString += `<p>Out of ${patientsPerGroup[group]} patients in Group ${parseInt(group) + 1}:\n</p><ul>`;
+      for (const attribute in nulls[group]) {
+        console.log(attribute);
+        outputString += `<li><strong>${nulls[group][attribute]}</strong> don't have a value recorded for <strong>${attribute}</strong></li>`;
+      }
+      outputString += '</ul>';
+    }
+    output.innerHTML += outputString;
   }
 
   function getPatientGroups(data, criteria, attrInfo) {
