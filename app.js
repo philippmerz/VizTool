@@ -116,6 +116,7 @@ $(document).ready(function () {
       }
       outputString += '</ul>';
     }
+    if (patientsPerGroup.reduce((acc, len) => acc && (len == 0), true)) outputString = '<p style="color: darkred">There are no patients matching these criteria. Double check and try again.</p>';
     output.innerHTML += outputString;
   }
 
