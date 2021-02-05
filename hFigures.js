@@ -10,7 +10,7 @@
  * @constructor
  */
 
-function HealthFigure(groups, w, className, options){
+function HealthFigure(patientGroups, w, className, attrInfo) {
 
     /*
      function angle(startAngle, endAngle) {
@@ -34,12 +34,59 @@ function HealthFigure(groups, w, className, options){
     // given a timestamp
     // each circle computes: radius, x, y, color
     // functions: first, last, next, previous, goto(timestamp)
+    var groups = [];
+    for (var k = 0; k < attrInfo.length; k++) {
+        groups.push({
+            label: "Hematocrit",
+            measurements: [{
+                min: -1,
+                max: 1,
+                yellow_max: 0.9,
+                yellow_min: -0.9,
+                red_max: 1.2,
+                red_min: -1.2,
+                units: "g/l",
+                label: "",
+                samples: [{
+                        timestamp: 1,
+                        value: 0.236515447
+                    },
+                    {
+                        timestamp: 2,
+                        value: -0.541696429252624
+                    },
+
+                ]
+            }]
+        });
+    }
+
+    for (var k = 0; k < attrInfo.length; k++) {
+        samples = [];
+        for (var i = 0; i < patientGroups.length; i++) {
+            sample = {}
+            sample['timestamp'] = k + 1;
+            var avg = 0;
+            for (var j = 0; j < patientGroups[i].length; j++) {
+                avg = avg + patientGroups[i][j][attrInfo[k]];
+            }
+            sample['value'] = avg / patientGroups[i].length
+            samples.push(sample);
+        }
+        //dict = {};
+        //dict['label'] = attrInfo[k];
+        //dict['sample'] = samples
+
+        groups[k]['label'] = attrInfo[k];
+        groups[k]['samples'] = samples
+    }
 
 
-    function createSVG(className, w){
+
+    function createSVG(className, w) {
         var svg;
 
-        svg = d3.select('#main')
+        svg = d3v3.select('#main')
             .append("svg")
             .attr("width", "100%")
             .attr("height", "100%");
@@ -47,7 +94,7 @@ function HealthFigure(groups, w, className, options){
         return svg;
     }
 
-    function createHFigure(svg){
+    function createHFigure(svg) {
         var hFigure;
 
         hFigure = svg.append("g")
@@ -58,21 +105,21 @@ function HealthFigure(groups, w, className, options){
         return hFigure;
     }
 
-    function createZones(d3target, measurementsDataObjects, arc){
+    function createZones(d3v3target, measurementsDataObjects, arc) {
 
         var zones;
 
-        zones = d3target.append("g")
+        zones = d3v3target.append("g")
             .attr("class", "arcs")
             .selectAll("path.arc")
             .data(measurementsDataObjects)
             .enter()
             .append("path")
             .attr("fill", function (d) {
-                return (d.data.label === "empty")? "none" : "#D4ECD5";
+                return (d.data.label === "empty") ? "none" : "#D4ECD5";
             })
             .attr("stroke", function (d) {
-                return (d.data.label === "empty")? "none" : "grey";
+                return (d.data.label === "empty") ? "none" : "grey";
             })
             .attr({
                 "class": "measurementArc",
@@ -84,11 +131,11 @@ function HealthFigure(groups, w, className, options){
         return zones;
     }
 
-    function extractMeasurements(groupedMeasurements){
+    function extractMeasurements(groupedMeasurements) {
         var group;
         var total = [];
 
-        for(var i = 0; i < groupedMeasurements.length; i ++){
+        for (var i = 0; i < groupedMeasurements.length; i++) {
             group = groupedMeasurements[i];
 
             total = total.concat(group.measurements);
@@ -106,10 +153,10 @@ function HealthFigure(groups, w, className, options){
     }
 
     // how to update the polygon
-    function updatePolygon(d3root, timestamp, polygon){
+    function updatePolygon(d3v3root, timestamp, polygon) {
         polygonData = [];
 
-        d3root.selectAll("g.activeFigure")
+        d3v3root.selectAll("g.activeFigure")
             .selectAll("g.measurement")
             .each(function (d) {
                 polygonData.push(getArc(d.data, timestamp).centroid(d));
@@ -120,15 +167,15 @@ function HealthFigure(groups, w, className, options){
     }
 
     // how to update the circles
-    function updateMeasurements(circles, timestamp){
+    function updateMeasurements(circles, timestamp) {
 
-        circles.on('mouseover', function(d){
+        circles.on('mouseover', function (d) {
 
             var selectedSample = getSelectedSample(d.data, timestamp);
             console.log(d.data.label + " : " + selectedSample.value);
 
         });
-        circles.on('mouseout', function(d){
+        circles.on('mouseout', function (d) {
 
         });
 
@@ -140,19 +187,19 @@ function HealthFigure(groups, w, className, options){
                 return getArc(d.data, timestamp).centroid(d)[1];
             })
             .attr("fill", function (d) {
-                return getColor(d.data, timestamp, d3.select(this).attr("class"));
+                return getColor(d.data, timestamp, d3v3.select(this).attr("class"));
             });
     }
 
     // get the arc object to calculate the centroid
-    function getArc(measurement, timestamp){
+    function getArc(measurement, timestamp) {
         var arc;
         var radius;
 
         // needs a radius that is calculated using the scale
         radius = getRadius(measurement, timestamp);
 
-        arc = d3.svg.arc()
+        arc = d3v3.svg.arc()
             .innerRadius(radius)
             .outerRadius(radius);
 
@@ -160,13 +207,13 @@ function HealthFigure(groups, w, className, options){
     }
 
     // creates the radius using the scale of min and max
-    function getRadius(measurement, timestamp){
+    function getRadius(measurement, timestamp) {
 
         var scale;
         var selectedSample;
         var radius;
 
-        scale = d3.scale.linear()
+        scale = d3v3.scale.linear()
             .domain([measurement.min, measurement.max])
             .range([innerRadius, outerRadius]);
 
@@ -177,7 +224,7 @@ function HealthFigure(groups, w, className, options){
         return radius;
     }
 
-    function getSelectedSample(measurement, timestamp){
+    function getSelectedSample(measurement, timestamp) {
         var samples = measurement.samples;
         var index = getSampleIndex(timestamp, samples);
 
@@ -185,10 +232,10 @@ function HealthFigure(groups, w, className, options){
     }
 
     // move the labels outside the calculated radius
-    function moveLabelHorizontally(d, angle){
+    function moveLabelHorizontally(d, angle) {
         var offset;
 
-        offset = d.box.width/2;
+        offset = d.box.width / 2;
 
         // clockwise the 12 o'clock is 0 and 6 o'clock is PI
 
@@ -200,19 +247,20 @@ function HealthFigure(groups, w, className, options){
     // move the labels so they do not overlap
     var verticalLabelLimit = 0;
     var verticalLabelMargin = 5;
-    function moveLabelVertically(i, angle, height, y){
 
-        var delta = i === 0 ? -1 * verticalLabelMargin: 0,
-            upper = angle >= 3/2 * Math.PI || angle <= Math.PI/2;
+    function moveLabelVertically(i, angle, height, y) {
+
+        var delta = i === 0 ? -1 * verticalLabelMargin : 0,
+            upper = angle >= 3 / 2 * Math.PI || angle <= Math.PI / 2;
 
         var collision = upper ?
             (y + height + verticalLabelMargin) >= verticalLabelLimit :
             y <= verticalLabelLimit;
 
-        if(collision && i > 0)
+        if (collision && i > 0)
             delta = upper ?
-                verticalLabelLimit - (y + height + verticalLabelMargin) : // negative to move it up
-                verticalLabelLimit - y; // positive to move it down
+            verticalLabelLimit - (y + height + verticalLabelMargin) : // negative to move it up
+            verticalLabelLimit - y; // positive to move it down
 
 
         verticalLabelLimit = upper ?
@@ -224,7 +272,7 @@ function HealthFigure(groups, w, className, options){
     }
 
     // get the final x and y for the label groups
-    function getLabelCoordinates(d, i, timestamps){
+    function getLabelCoordinates(d, i, timestamps) {
 
         var timestamp;
         var marginLabelMeasurement = 50;
@@ -233,9 +281,9 @@ function HealthFigure(groups, w, className, options){
         var finalRadius = 0;
         var coordinates;
         var y;
-        var angle = d.startAngle + (d.endAngle - d.startAngle)/2; // preserve the previous angle to complete the circle
+        var angle = d.startAngle + (d.endAngle - d.startAngle) / 2; // preserve the previous angle to complete the circle
 
-        for(var j = 0; j < timestamps.length; j ++){
+        for (var j = 0; j < timestamps.length; j++) {
             timestamp = timestamps[j];
             measurementRadius = getRadius(d.data, timestamp);
             finalRadius = Math.max(measurementRadius + marginLabelMeasurement, defaultLabelRadius, finalRadius);
@@ -244,7 +292,7 @@ function HealthFigure(groups, w, className, options){
 
 
 
-        arc = d3.svg.arc()
+        arc = d3v3.svg.arc()
             .innerRadius(finalRadius)
             .outerRadius(finalRadius);
 
@@ -253,7 +301,7 @@ function HealthFigure(groups, w, className, options){
         // move the labels horizontally outside the radius (x)
         coordinates[0] = coordinates[0] + moveLabelHorizontally(d, angle);
 
-        y = coordinates[1] - d.box.height *.825;
+        y = coordinates[1] - d.box.height * .825;
 
         /*
         hFigure.append("circle")
@@ -289,7 +337,7 @@ function HealthFigure(groups, w, className, options){
         return coordinates;
     }
 
-    function getGroupLabelCoordinates(d, i, timestamps){
+    function getGroupLabelCoordinates(d, i, timestamps) {
 
         var timestamp;
         var marginLabelMeasurement = 50;
@@ -300,11 +348,11 @@ function HealthFigure(groups, w, className, options){
         var coordinates;
         var y;
         var closestMeasurement;
-        var angle = d.startAngle + (d.endAngle - d.startAngle)/2; // preserve the previous angle to complete the circle
+        var angle = d.startAngle + (d.endAngle - d.startAngle) / 2; // preserve the previous angle to complete the circle
 
         d.data.measurements.sort(function (a, b) {
-            var angleA = a.startAngle + (a.endAngle - a.startAngle)/2;
-            var angleB = b.startAngle + (b.endAngle - b.startAngle)/2;
+            var angleA = a.startAngle + (a.endAngle - a.startAngle) / 2;
+            var angleB = b.startAngle + (b.endAngle - b.startAngle) / 2;
             var diffA = Math.abs(angleA - angle);
             var diffB = Math.abs(angleB - angle);
 
@@ -315,9 +363,9 @@ function HealthFigure(groups, w, className, options){
 
         // we need to get the measurement closer to this angle
 
-        for(var j = 0; j < Math.min(numberOfClosestMeasurementsToCheck, d.data.measurements.length); j++){
+        for (var j = 0; j < Math.min(numberOfClosestMeasurementsToCheck, d.data.measurements.length); j++) {
             closestMeasurement = d.data.measurements[j].data;
-            for(var k = 0; k < timestamps.length; k++){
+            for (var k = 0; k < timestamps.length; k++) {
                 timestamp = timestamps[k];
                 measurementRadius = getRadius(closestMeasurement, timestamp);
                 finalRadius = Math.max(measurementRadius + marginLabelMeasurement, defaultLabelRadius, finalRadius);
@@ -329,7 +377,7 @@ function HealthFigure(groups, w, className, options){
 
         // finalRadius = Math.max(measurementRadius + marginLabelMeasurement, defaultLabelRadius);
 
-        arc = d3.svg.arc()
+        arc = d3v3.svg.arc()
             .innerRadius(finalRadius)
             .outerRadius(finalRadius);
 
@@ -338,7 +386,7 @@ function HealthFigure(groups, w, className, options){
         // move the labels horizontally outside the radius (x)
         coordinates[0] = coordinates[0] + moveLabelHorizontally(d, angle);
 
-        y = coordinates[1] - d.box.height *.825;
+        y = coordinates[1] - d.box.height * .825;
 
         // move the labels vertically to avoid overlapping (y)
         // console.log( d.data.label + " " + d.box.height );
@@ -355,28 +403,27 @@ function HealthFigure(groups, w, className, options){
 
 
     // selects the sample closest to the timestamp provided but before that not after
-    function getSampleIndex(timestamp, samples){
+    function getSampleIndex(timestamp, samples) {
         var i;
 
         samples.sort(function (a, b) {
             return a.timestamp - b.timestamp;
         });
 
-        for(i = 0; i < samples.length; i++){
-            if(samples[i].timestamp === timestamp){
+        for (i = 0; i < samples.length; i++) {
+            if (samples[i].timestamp === timestamp) {
                 return i;
-            }
-            else if (samples[i].timestamp > timestamp){
+            } else if (samples[i].timestamp > timestamp) {
                 break;
             }
         }
 
         --i; // return the index of the sample that is either at the exact time or before
-        return i < 0 ? 0: i;
+        return i < 0 ? 0 : i;
     }
 
     // get next and previous samples
-    function getNext(){
+    function getNext() {
 
         // from the referenceTimestamp we find the closest following timestamp
         // we return that timestamp
@@ -384,20 +431,21 @@ function HealthFigure(groups, w, className, options){
         var closestNextTimestamp = -1;
         var samples;
         var timestampToCompare;
-        for(var i = 0; i < measurementsArray.length; i ++){
-            if(measurementsArray[i].label === "empty") continue; // discard the group label elements
+        for (var i = 0; i < measurementsArray.length; i++) {
+            if (measurementsArray[i].label === "empty") continue; // discard the group label elements
             samples = measurementsArray[i].samples;
-            samples.sort(function (a, b) { return a.timestamp - b.timestamp; }); // ascending order by timestamp
+            samples.sort(function (a, b) {
+                return a.timestamp - b.timestamp;
+            }); // ascending order by timestamp
 
-            for(var j = 0; j < samples.length; j++){
+            for (var j = 0; j < samples.length; j++) {
                 timestampToCompare = samples[j].timestamp;
-                if(referenceTimestamp < timestampToCompare){
-                    if(closestNextTimestamp === -1){ // check if there is any value given to closestNextTimestamp
+                if (referenceTimestamp < timestampToCompare) {
+                    if (closestNextTimestamp === -1) { // check if there is any value given to closestNextTimestamp
                         closestNextTimestamp = timestampToCompare;
                         // stop checking samples of this measurement because they are in ascending order
                         break;
-                    }
-                    else if(closestNextTimestamp > timestampToCompare){ // we found a closer timestamp
+                    } else if (closestNextTimestamp > timestampToCompare) { // we found a closer timestamp
                         closestNextTimestamp = timestampToCompare;
                         break;
                     }
@@ -405,11 +453,11 @@ function HealthFigure(groups, w, className, options){
             }
         }
 
-        return closestNextTimestamp === -1 ? referenceTimestamp: closestNextTimestamp;
+        return closestNextTimestamp === -1 ? referenceTimestamp : closestNextTimestamp;
 
     }
 
-    function getColor(measurement, timestamp, className){
+    function getColor(measurement, timestamp, className) {
         var color = "white"; // by default
         var yellowMin = "yellow_min";
         var yellowMax = "yellow_max";
@@ -420,54 +468,54 @@ function HealthFigure(groups, w, className, options){
         var sample;
         var index;
 
-        var yellow = className === "active" ? "gold": "#FFEF99";
-        var red = className === "active" ? "tomato": "#FFC1B5";
-        var green = className === "active" ? "#73D651": "#9DE285";
+        var yellow = className === "active" ? "gold" : "#FFEF99";
+        var red = className === "active" ? "tomato" : "#FFC1B5";
+        var green = className === "active" ? "#73D651" : "#9DE285";
 
 
         index = getSampleIndex(timestamp, samples);
         sample = measurement.samples[index];
 
         // checking now for less than the recommended
-        if (typeof measurement[yellowMin] != 'undefined'){
+        if (typeof measurement[yellowMin] != 'undefined') {
             hasAdditionalRanges = true;
-            if(sample.value <= measurement[yellowMin]){
+            if (sample.value <= measurement[yellowMin]) {
                 color = yellow;
             }
         }
 
-        if (typeof measurement[redMin] != 'undefined'){
+        if (typeof measurement[redMin] != 'undefined') {
             hasAdditionalRanges = true;
-            if(sample.value <= measurement[redMin]){
+            if (sample.value <= measurement[redMin]) {
                 color = red;
             }
         }
         // checking for more than the recommended
-        if (typeof measurement[yellowMax] != 'undefined'){
+        if (typeof measurement[yellowMax] != 'undefined') {
             hasAdditionalRanges = true;
-            if(sample.value >= measurement[yellowMax]){
+            if (sample.value >= measurement[yellowMax]) {
                 color = yellow;
             }
         }
 
-        if (typeof measurement[redMax] != 'undefined'){
+        if (typeof measurement[redMax] != 'undefined') {
             hasAdditionalRanges = true;
-            if(sample.value >= measurement[redMax]){
+            if (sample.value >= measurement[redMax]) {
                 color = red;
             }
         }
 
-        if (hasAdditionalRanges && color === "white"){
+        if (hasAdditionalRanges && color === "white") {
             color = green;
         }
 
         return color;
     }
 
-    function createSvgMeasurementGroups(d3root, data){
+    function createSvgMeasurementGroups(d3v3root, data) {
         var svgGroups;
 
-        svgGroups = d3root.selectAll("g.measurement")
+        svgGroups = d3v3root.selectAll("g.measurement")
             .data(data)
             .enter()
             .append("g")
@@ -477,10 +525,10 @@ function HealthFigure(groups, w, className, options){
 
     }
 
-    function createSvgPolygon(d3root, data, className){
+    function createSvgPolygon(d3v3root, data, className) {
         var polygon;
 
-        polygon = d3root.selectAll("g.polygons")
+        polygon = d3v3root.selectAll("g.polygons")
             .append("polygon")
             .attr("points", [data].join(" ")).attr({
                 "stroke-width": 1,
@@ -489,15 +537,15 @@ function HealthFigure(groups, w, className, options){
                 "vector-effect": "non-scaling-stroke",
                 "class": className
             })
-            .attr("stroke", className === "active" ? "#5b5b5b": "#BFBFBF");
+            .attr("stroke", className === "active" ? "#5b5b5b" : "#BFBFBF");
 
         // previous color #5b5b5b
 
         return polygon;
     }
 
-    function createMeasurementCircles(d3root, circleRadius, className){
-        var circles = d3root.selectAll("g.measurement")
+    function createMeasurementCircles(d3v3root, circleRadius, className) {
+        var circles = d3v3root.selectAll("g.measurement")
             .append("circle")
             .attr({
                 "stroke": "black",
@@ -508,13 +556,13 @@ function HealthFigure(groups, w, className, options){
                 "cy": 0,
                 "class": className
             })
-            .attr("stroke", className === "active" ? "#5b5b5b": "#BFBFBF");;
+            .attr("stroke", className === "active" ? "#5b5b5b" : "#BFBFBF");;
 
 
         return circles;
     }
 
-    function insertBoxToLabel(d){
+    function insertBoxToLabel(d) {
         // IMPORTANT: we need to add here the size of the text for the rectangle's dimensions!
         var box = this.getBBox();
 
@@ -530,7 +578,7 @@ function HealthFigure(groups, w, className, options){
         // d.box.height += 4;
     }
 
-    function insertOffset(d){
+    function insertOffset(d) {
         // IMPORTANT: we need to add here the size of the text for the rectangle's dimensions!
 
         d.offset = {};
@@ -539,11 +587,11 @@ function HealthFigure(groups, w, className, options){
         d.offset.y = 0;
     }
 
-    function resizeBox(d3root){
-        d3root.selectAll("g.hasLabel")
+    function resizeBox(d3v3root) {
+        d3v3root.selectAll("g.hasLabel")
             .selectAll("g.label")
             .selectAll("rect")
-            .attr("x", function(d){
+            .attr("x", function (d) {
                 return d.box.x;
             })
             .attr("y", function (d) {
@@ -557,57 +605,57 @@ function HealthFigure(groups, w, className, options){
             })
     }
 
-    function ascending (a, b) {
+    function ascending(a, b) {
         var angleA = getAngle(a);
         var angleB = getAngle(b);
 
         return angleA - angleB;
     }
 
-    function descending (a, b) {
+    function descending(a, b) {
         var angleA = getAngle(a);
         var angleB = getAngle(b);
 
         return angleB - angleA;
     }
 
-    function getAngle(d){
-        return d.startAngle + (d.endAngle - d.startAngle)/2;
+    function getAngle(d) {
+        return d.startAngle + (d.endAngle - d.startAngle) / 2;
     }
 
-    function angleUpperRight (d){
+    function angleUpperRight(d) {
         var angle = getAngle(d);
 
-        return angle <= Math.PI/2;
+        return angle <= Math.PI / 2;
     }
 
-    function angleUpperLeft (d){
+    function angleUpperLeft(d) {
         var angle = getAngle(d);
 
-        return angle >= 3/2 * Math.PI;
+        return angle >= 3 / 2 * Math.PI;
     }
 
-    function angleLowerRight (d){
+    function angleLowerRight(d) {
         var angle = getAngle(d);
-        return angle > Math.PI/2 && angle <= Math.PI;
+        return angle > Math.PI / 2 && angle <= Math.PI;
     }
 
-    function angleLowerLeft (d){
+    function angleLowerLeft(d) {
         var angle = getAngle(d);
 
-        return angle < 3/2*Math.PI && angle >= Math.PI;
+        return angle < 3 / 2 * Math.PI && angle >= Math.PI;
     }
 
-    function moveLabels(d3root, anglePosition, sortFunction, timestamps){
+    function moveLabels(d3v3root, anglePosition, sortFunction, timestamps) {
 
-        var i = 0; // variable i from d3 does not work for this case
+        var i = 0; // variable i from d3v3 does not work for this case
 
         verticalLabelLimit = 0;
 
         /**
-         * http://stackoverflow.com/questions/13203897/d3-nested-appends-and-data-flow
-         * https://github.com/mbostock/d3/wiki/Selections
-         * http://bocoup.com/weblog/reusability-with-d3/
+         * http://stackoverflow.com/questions/13203897/d3v3-nested-appends-and-data-flow
+         * https://github.com/mbostock/d3v3/wiki/Selections
+         * http://bocoup.com/weblog/reusability-with-d3v3/
          * http://bost.ocks.org/mike/nest/
          * http://bl.ocks.org/phoebebright/raw/3176159/
          */
@@ -615,7 +663,7 @@ function HealthFigure(groups, w, className, options){
         // I have to sort the parent but that will destroy the polygon
         // unless we restore the order after the new coordinates have been computed
 
-        d3root
+        d3v3root
             .selectAll("g.hasLabel")
             .filter(anglePosition)
             .sort(sortFunction)
@@ -623,13 +671,13 @@ function HealthFigure(groups, w, className, options){
             .transition()
             .attr("transform", function (d) {
                 var coordinates = [];
-                var className = d3.select(this.parentNode).attr("class");
+                var className = d3v3.select(this.parentNode).attr("class");
                 var searchResult = className.search("measurement");
 
-                if(searchResult > -1){
+                if (searchResult > -1) {
                     // console.log(d.data.label + ": " + angle);
                     coordinates = getLabelCoordinates(d, i, timestamps);
-                } else{
+                } else {
                     // console.log("* " + d.data.label + ": " + angle);
                     coordinates = getGroupLabelCoordinates(d, i, timestamps);
                 }
@@ -639,77 +687,83 @@ function HealthFigure(groups, w, className, options){
             });
     }
 
-    function moveLabelsWrapper(d3root, timestamps){
+    function moveLabelsWrapper(d3v3root, timestamps) {
 
         // upper right corner
-        moveLabels(d3root, angleUpperRight, descending, timestamps);
+        moveLabels(d3v3root, angleUpperRight, descending, timestamps);
 
         // upper left corner
-        moveLabels(d3root, angleUpperLeft, ascending, timestamps);
+        moveLabels(d3v3root, angleUpperLeft, ascending, timestamps);
 
         // lower right corner
-        moveLabels(d3root, angleLowerRight, ascending, timestamps);
+        moveLabels(d3v3root, angleLowerRight, ascending, timestamps);
 
         // lower left corner
-        moveLabels(d3root, angleLowerLeft, descending, timestamps);
+        moveLabels(d3v3root, angleLowerLeft, descending, timestamps);
 
-        d3root.selectAll("g.measurement")
+        d3v3root.selectAll("g.measurement")
             .sort(ascending);
 
         // put the groups back into their container
-        d3root.selectAll("g.groupLabel")
+        d3v3root.selectAll("g.groupLabel")
             .each(function (d) {
-                d3.select("g.groupLabels").node().appendChild(this);
+                d3v3.select("g.groupLabels").node().appendChild(this);
             });
 
 
         // now the lines
-        updateLabelLine(d3root, timestamps);
+        updateLabelLine(d3v3root, timestamps);
 
     }
 
     // update the label text
-    function updateLabels(d3root, timestamp) {
+    function updateLabels(d3v3root, timestamp) {
 
-        updateLabelText(d3root, timestamp);
+        updateLabelText(d3v3root, timestamp);
 
-        d3root.selectAll("g.groupLabel g.label text")
+        d3v3root.selectAll("g.groupLabel g.label text")
             .text(function (d) {
                 return d.data.label;
             });
 
-        d3root.selectAll("g.hasLabel g.label text")
+        d3v3root.selectAll("g.hasLabel g.label text")
             .each(insertBoxToLabel)
             .each(insertOffset);
 
-        resizeBox(d3root);
+        resizeBox(d3v3root);
 
     }
 
     function endAll(transition, callback) {
         var n = 0;
-        transition.each(function() { ++n; })
-            .each('end', function() {
+        transition.each(function () {
+                ++n;
+            })
+            .each('end', function () {
                 if (!--n) callback.apply(this, arguments);
             });
     }
 
-    function updateLabelLine(d3root, timestamps){
+    function updateLabelLine(d3v3root, timestamps) {
 
-        var lineFunction = d3.svg.line()
-            .x(function(d) { return d.x; })
-            .y(function(d) { return d.y; })
+        var lineFunction = d3v3.svg.line()
+            .x(function (d) {
+                return d.x;
+            })
+            .y(function (d) {
+                return d.y;
+            })
             .interpolate("linear");
 
-        d3root.selectAll("g.measurement")
+        d3v3root.selectAll("g.measurement")
             .selectAll("path")
             .transition()
-            .attr("d", function(d){
+            .attr("d", function (d) {
                 return getLabelLinePath(lineFunction, timestamps, d);
             });
     }
 
-    function getLabelLinePath(lineFunction, timestamps, d){
+    function getLabelLinePath(lineFunction, timestamps, d) {
 
         var timestamp;
         var radii = [];
@@ -722,7 +776,7 @@ function HealthFigure(groups, w, className, options){
         labelOffset.x = 0;
         labelOffset.y = 0;
 
-        for(var i = 0; i < timestamps.length; i ++){
+        for (var i = 0; i < timestamps.length; i++) {
 
             timestamp = timestamps[i];
             measurementRadius = getRadius(d.data, timestamp);
@@ -731,12 +785,12 @@ function HealthFigure(groups, w, className, options){
         }
 
         radii.sort(function (a, b) {
-            return a-b;
+            return a - b;
         });
 
-        for(var i = 0; i < radii.length; i ++){
+        for (var i = 0; i < radii.length; i++) {
 
-            arc = d3.svg.arc()
+            arc = d3v3.svg.arc()
                 .innerRadius(radii[i])
                 .outerRadius(radii[i]);
 
@@ -751,7 +805,7 @@ function HealthFigure(groups, w, className, options){
 
         angle = getAngle(d);
 
-        labelOffset.x = angle <= Math.PI ? -1: 1;
+        labelOffset.x = angle <= Math.PI ? -1 : 1;
         labelOffset.x *= d.box.width * 0.49;
 
 
@@ -765,10 +819,10 @@ function HealthFigure(groups, w, className, options){
         return lineFunction(lineData);
     }
 
-    function updateLabelText(d3root, timestamp){
+    function updateLabelText(d3v3root, timestamp) {
         var selectedSample;
 
-        d3root.selectAll("g.measurement")
+        d3v3root.selectAll("g.measurement")
             .selectAll("g.label")
             .selectAll("text")
             .text(function (d) {
@@ -777,28 +831,28 @@ function HealthFigure(groups, w, className, options){
             });
     }
 
-    function createSvgLabelGroups(d3root){
+    function createSvgLabelGroups(d3v3root) {
         var labelGroups;
 
         // create the lines
-        createSvgLabelLines(d3root);
+        createSvgLabelLines(d3v3root);
 
-        labelGroups = d3root.selectAll("g.hasLabel")
+        labelGroups = d3v3root.selectAll("g.hasLabel")
             .append("g")
             .attr("class", "label");
 
-        createSvgLabelTexts(d3root);
+        createSvgLabelTexts(d3v3root);
 
         // create the rectangle
-        createSvgLabelRectangles(d3root);
+        createSvgLabelRectangles(d3v3root);
 
 
         // move the text in front of the rectangles
-        d3root.selectAll("g.hasLabel")
+        d3v3root.selectAll("g.hasLabel")
             .selectAll("g.label")
             .selectAll("text")
             .each(function (d) {
-                d3.select(this).node().parentNode.appendChild(d3.select(this).node());
+                d3v3.select(this).node().parentNode.appendChild(d3v3.select(this).node());
             });
 
 
@@ -806,10 +860,10 @@ function HealthFigure(groups, w, className, options){
         return labelGroups;
     }
 
-    function createSvgLabelLines(d3root){
+    function createSvgLabelLines(d3v3root) {
         var lines;
 
-        lines = d3root.selectAll("g.measurement")
+        lines = d3v3root.selectAll("g.measurement")
             .append("path")
             .attr({
                 "vector-effect": "non-scaling-stroke",
@@ -824,10 +878,10 @@ function HealthFigure(groups, w, className, options){
         return lines;
     }
 
-    function createSvgLabelTexts(d3root){
+    function createSvgLabelTexts(d3v3root) {
         var textElements;
 
-        textElements = d3root.selectAll("g.hasLabel")
+        textElements = d3v3root.selectAll("g.hasLabel")
             .selectAll("g.label")
             .append("text")
             .text(function (d) {
@@ -841,18 +895,18 @@ function HealthFigure(groups, w, className, options){
                 "fill": "grey"
             })
             .attr("font-size", function (d) {
-                var className = d3.select(this.parentNode.parentNode).attr("class");
+                var className = d3v3.select(this.parentNode.parentNode).attr("class");
                 var searchResult = className.search("measurement");
-                return searchResult > -1? measurementLabelFontSize: groupLabelFontSize;
+                return searchResult > -1 ? measurementLabelFontSize : groupLabelFontSize;
             });
 
         return textElements;
     }
 
-    function createSvgLabelRectangles(d3root){
+    function createSvgLabelRectangles(d3v3root) {
         var rectangles;
 
-        rectangles = d3root.selectAll("g.hasLabel")
+        rectangles = d3v3root.selectAll("g.hasLabel")
             .selectAll("g.label")
             .append("rect")
             .attr({
@@ -869,12 +923,12 @@ function HealthFigure(groups, w, className, options){
     }
 
     /**
-     * creates the d3 data array to draw/plot the group labels
+     * creates the d3v3 data array to draw/plot the group labels
      * @param groups
      * @param measurementsDataObjects
      * @returns {Array}
      */
-    function createGroupLabelDataObjects(groups, measurementsDataObjects){
+    function createGroupLabelDataObjects(groups, measurementsDataObjects) {
 
         var startAngle = 0;
         var endAngle = 0;
@@ -884,17 +938,16 @@ function HealthFigure(groups, w, className, options){
         var measurementsDataObjectsArray = []; // holds the measurementsDataObjects of each group
         var groupData = {};
 
-        for(var i = 0; i < measurementsDataObjects.length; i ++){
+        for (var i = 0; i < measurementsDataObjects.length; i++) {
 
             // Only insert those that are not empty labels
-            if(measurementsDataObjects[i].data.label != "empty")
+            if (measurementsDataObjects[i].data.label != "empty")
                 measurementsDataObjectsArray.push(measurementsDataObjects[i]);
 
-            if(firstMeasurementOfGroup){
+            if (firstMeasurementOfGroup) {
                 startAngle = measurementsDataObjects[i].startAngle;
                 firstMeasurementOfGroup = false;
-            }
-            else if(measurementsDataObjects[i].data.label === "empty"){
+            } else if (measurementsDataObjects[i].data.label === "empty") {
                 endAngle = measurementsDataObjects[i].endAngle;
                 firstMeasurementOfGroup = true;
 
@@ -918,31 +971,31 @@ function HealthFigure(groups, w, className, options){
 
     /**
      * Create an additional figure
-     * @param d3root
+     * @param d3v3root
      * @param timestamp
      * @returns {Figure}
      */
-    function plotAt(d3root, timestamp){
+    function plotAt(d3v3root, timestamp) {
         var polygon;
         var circles;
 
         polygon = createSvgPolygon(hFigure, initialPolygonData, "passive");
 
-        circles = createMeasurementCircles(d3root, circleRadius, "passive");
+        circles = createMeasurementCircles(d3v3root, circleRadius, "passive");
 
-        d3root.selectAll("circle.active")
+        d3v3root.selectAll("circle.active")
             .each(function (d) {
                 this.parentNode.appendChild(this);
             });
 
-        updatePlottedFigure(d3root, timestamp, polygon, circles);
+        updatePlottedFigure(d3v3root, timestamp, polygon, circles);
 
         var plottedFigure = new Figure(circles, timestamp, polygon);
 
         /**
          * Pass only the update as a publicly accessible method
          */
-        plottedFigure.update = function(newTimestamp){
+        plottedFigure.update = function (newTimestamp) {
             updateFromInstance.apply(plottedFigure, [newTimestamp]);
         };
 
@@ -951,20 +1004,20 @@ function HealthFigure(groups, w, className, options){
 
     /**
      * Update an existing figure to a given timestamp
-     * @param d3root
+     * @param d3v3root
      * @param timestamp
      * @param polygon
      * @param circles
      */
-    function updatePlottedFigure(d3root, timestamp, polygon, circles){
+    function updatePlottedFigure(d3v3root, timestamp, polygon, circles) {
 
         plottedTimestamps.push(timestamp); // add the timestamp to the array of plotted timestamps for detecting label collision
 
-        updatePolygon(d3root, timestamp, polygon); // polygon
+        updatePolygon(d3v3root, timestamp, polygon); // polygon
 
         updateMeasurements(circles, timestamp); // circles
 
-        moveLabelsWrapper(d3root, plottedTimestamps); // adjust overlapping labels
+        moveLabelsWrapper(d3v3root, plottedTimestamps); // adjust overlapping labels
 
     }
 
@@ -972,37 +1025,37 @@ function HealthFigure(groups, w, className, options){
      * Zoom
      */
 
-    function zoomIn(scale1, scale2){
+    function zoomIn(scale1, scale2) {
         return scale1 > threshold && scale1 > scale2 && !zoomedIn;
     }
 
-    function zoomOut(scale1, scale2){
+    function zoomOut(scale1, scale2) {
         return scale1 <= threshold && scale1 < scale2 && zoomedIn;
     }
 
-    function toggleZoom(){
+    function toggleZoom() {
         zoomedIn = !zoomedIn;
 
-        hFigure.selectAll("g.measurement").selectAll("g.label").attr("opacity", zoomedIn ? 1: 0);
-        hFigure.selectAll("g.measurement").selectAll("path").attr("opacity", zoomedIn ? 1: 0);
+        hFigure.selectAll("g.measurement").selectAll("g.label").attr("opacity", zoomedIn ? 1 : 0);
+        hFigure.selectAll("g.measurement").selectAll("path").attr("opacity", zoomedIn ? 1 : 0);
 
-        hFigure.selectAll("g.groupLabel").selectAll("g.label").attr("opacity", zoomedIn ? 0.5: 1);
+        hFigure.selectAll("g.groupLabel").selectAll("g.label").attr("opacity", zoomedIn ? 0.5 : 1);
     }
 
 
     function zoomed() {
         // uncomment to enable zoom in and out callbacks
 
-        if(zoomIn(d3.event.scale, prevScale) || zoomOut(d3.event.scale, prevScale)) toggleZoom();
+        if (zoomIn(d3v3.event.scale, prevScale) || zoomOut(d3v3.event.scale, prevScale)) toggleZoom();
 
         svg.select("g.hFigure-wrapper")
-            .attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            .attr("transform", "translate(" + d3v3.event.translate + ")scale(" + d3v3.event.scale + ")");
 
-        prevScale = d3.event.scale;
+        prevScale = d3v3.event.scale;
 
     }
 
-    function prepareZooming(){
+    function prepareZooming() {
         svg.selectAll("g.measurement").selectAll("g.label").attr("opacity", 0);
         svg.selectAll("g.measurement").selectAll("path").attr("opacity", 0);
 
@@ -1014,7 +1067,7 @@ function HealthFigure(groups, w, className, options){
     // the existing plotted timestamp
     // the new timestamp to plot
 
-    function updateFromInstance (newTimestamp) {
+    function updateFromInstance(newTimestamp) {
 
         var oldTimestamp = this.timestamp;
         var polygon = this.polygon;
@@ -1026,7 +1079,7 @@ function HealthFigure(groups, w, className, options){
         updatePolygon(hFigure, newTimestamp, polygon);
         updateMeasurements(circles, newTimestamp);
 
-        if(circles.attr("class") === "active")
+        if (circles.attr("class") === "active")
             updateLabels(hFigure, newTimestamp);
 
         moveLabelsWrapper(hFigure, plottedTimestamps);
@@ -1041,7 +1094,7 @@ function HealthFigure(groups, w, className, options){
      * @param polygon
      * @constructor
      */
-    function Figure (circles, timestamp, polygon){
+    function Figure(circles, timestamp, polygon) {
         this.circles = circles;
         this.timestamp = timestamp;
         this.polygon = polygon;
@@ -1053,24 +1106,24 @@ function HealthFigure(groups, w, className, options){
      * @param group
      * @param mouseOver
      */
-    function toggleMeasurementGroups(group, mouseOver){
+    function toggleMeasurementGroups(group, mouseOver) {
 
         group.select("rect")
             .transition()
-            .attr("fill", mouseOver ? "#FFFF66": "white")
-            .attr("stroke", mouseOver ? "black": "grey");
+            .attr("fill", mouseOver ? "#FFFF66" : "white")
+            .attr("stroke", mouseOver ? "black" : "grey");
 
         group.select("text")
             .transition()
-            .attr("fill", mouseOver ? "black": "grey");
+            .attr("fill", mouseOver ? "black" : "grey");
 
         group.selectAll("circle")
             .transition()
-            .attr("r", mouseOver ? circleRadius * 1.85: circleRadius);
+            .attr("r", mouseOver ? circleRadius * 1.85 : circleRadius);
 
         group.select("path")
             .transition()
-            .attr("stroke-width", mouseOver ? 2.75: 1);
+            .attr("stroke-width", mouseOver ? 2.75 : 1);
 
     }
 
@@ -1084,7 +1137,7 @@ function HealthFigure(groups, w, className, options){
     var options = options || {};
 
     // Other options
-    var outerRadius = w * 0.4; // check a scale function from d3
+    var outerRadius = w * 0.4; // check a scale function from d3v3
     var innerRadius = w * 0.3;
     var defaultLabelRadius = w * 0.45;
 
@@ -1125,16 +1178,16 @@ function HealthFigure(groups, w, className, options){
     svg = createSVG(className, w);
     hFigure = createHFigure(svg);
 
-    arc = d3.svg.arc()
+    arc = d3v3.svg.arc()
         .innerRadius(innerRadius)
         .outerRadius(outerRadius);
 
     // a pie chart for the measurements
 
-    pie = d3.layout.pie()
+    pie = d3v3.layout.pie()
         .value(function (d) {
             // all the measurements will have the same space of the donut
-            return d.label === "empty" ? 1: 2;
+            return d.label === "empty" ? 1 : 2;
         })
         .sort(null); // no ordering to preserve the order from the data source
 
@@ -1154,7 +1207,7 @@ function HealthFigure(groups, w, className, options){
     });
 
     // create a polygon
-    for(var i = 0; i < measurementsObjects.length; i ++){
+    for (var i = 0; i < measurementsObjects.length; i++) {
         initialPolygonData.push([0, 0]);
     }
 
@@ -1199,10 +1252,10 @@ function HealthFigure(groups, w, className, options){
     // create the circles in each of the SVG group with the class "measurement"
     activeCircles = createMeasurementCircles(activeMeasurements, circleRadius, "active");
 
-    svgMeasurementGroups.on("mouseover", function(d){
-        toggleMeasurementGroups(d3.select(this), true);
-    }).on("mouseout", function(d){
-        toggleMeasurementGroups(d3.select(this), false);
+    svgMeasurementGroups.on("mouseover", function (d) {
+        toggleMeasurementGroups(d3v3.select(this), true);
+    }).on("mouseout", function (d) {
+        toggleMeasurementGroups(d3v3.select(this), false);
     });
 
     // here we can call the update functions
@@ -1236,14 +1289,14 @@ function HealthFigure(groups, w, className, options){
     var maxHeight = 0;
     hFigure.selectAll("g.groupLabel")
         .each(function (d) {
-            maxWidth  = Math.max(maxWidth,  Math.abs(d.offset.x) + d.box.width);
+            maxWidth = Math.max(maxWidth, Math.abs(d.offset.x) + d.box.width);
             maxHeight = Math.max(maxHeight, Math.abs(d.offset.y) + (d.box.height * 2));
         });
 
-    maxWidth  *= minScale;
+    maxWidth *= minScale;
     maxHeight *= minScale;
 
-    var zoom = d3.behavior.zoom()
+    var zoom = d3v3.behavior.zoom()
         .scaleExtent([minScale, maxScale])
         .on("zoom", zoomed)
         .translate([maxWidth, maxHeight]).scale(minScale);
@@ -1263,12 +1316,12 @@ function HealthFigure(groups, w, className, options){
      * @type {Figure}
      */
     var initialFigure = new Figure(activeCircles, timestampToPlot, activePolygon);
-    
+
     // activeMeasurements
-    
-    var activeMeasurementsParent = d3.select("g.measurements").node();
-    
-    d3.selectAll("g.measurement").each(function(){
+
+    var activeMeasurementsParent = d3v3.select("g.measurements").node();
+
+    d3v3.selectAll("g.measurement").each(function () {
         activeMeasurementsParent.appendChild(this);
     });
 
@@ -1276,11 +1329,11 @@ function HealthFigure(groups, w, className, options){
      * Expose only the methods needed by the user
      * This is a facade paradigm
      */
-    initialFigure.update = function(newTimestamp){
+    initialFigure.update = function (newTimestamp) {
         updateFromInstance.apply(initialFigure, [newTimestamp]);
     };
 
-    initialFigure.next = function(){
+    initialFigure.next = function () {
         return getNext.apply(initialFigure);
     };
 
@@ -1292,4 +1345,3 @@ function HealthFigure(groups, w, className, options){
     return initialFigure;
 
 }
-

@@ -74,9 +74,10 @@ $(document).ready(function () {
     attrToCompare = getAttributesToCompare();
     input = [patientGroups, attrToCompare];
 
-    console.log(document.querySelectorAll('#main svg'));
     SPM(patientGroups.flat(5), attrToCompare);
     ridgeplot(patientGroups.flat(5), attrToCompare);
+
+    HealthFigure(patientGroups, 800, 'main', attrToCompare).plotAt(0);
 
     Array.from(document.querySelectorAll('#main svg')).forEach((e) => {
       e.setAttribute('viewBox', '0 0 ' + e.clientWidth + ' ' + e.clientHeight);
