@@ -219,6 +219,7 @@ $(document).ready(function () {
   }
 
   function getCriteria() {
+    
     // returns list of criteria grouped by group into lists
     // Example: [{attr1: crit1, attr2: crit2}, {attr1: crit1, attr2: crit2, attr3: crit3}]
     criteria = [];
